@@ -14,7 +14,8 @@ cabal-version:       >=1.10
 
 executable cbl-diff
   main-is:             Main.hs
-  other-modules:       Diff
+  other-modules:       Depends
+                       Diff
   hs-source-dirs:      . src
   build-depends:       base < 5,
                        bytestring,
