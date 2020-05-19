@@ -1,0 +1,6 @@
+resolver: lts-12.26
+packages:
+  - .
+extra-deps:
+  - simple-cabal-0.1.0
+  - simple-cmd-args-0.1.2
