@@ -15,7 +15,7 @@ cabal-version:       >=1.10
 executable cbl-file
   main-is:             Main.hs
   other-modules:       Depends
-                       Diff
+                       Index
   hs-source-dirs:      . src
   build-depends:       base < 5,
                        bytestring,

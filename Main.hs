@@ -8,7 +8,7 @@ import Options.Applicative
 import SimpleCmdArgs
 
 import Depends
-import Diff
+import Index
 
 main :: IO ()
 main =

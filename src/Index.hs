@@ -2,7 +2,7 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE GADTs #-}
 
-module Diff (diffCmd, listPkg, saveCabal) where
+module Index (diffCmd, listPkg, saveCabal) where
 
 -- provided by simple-cmd-args 0.1.3
 --import Control.Applicative ((<|>))
