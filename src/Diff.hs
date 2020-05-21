@@ -30,7 +30,8 @@ import SimpleCmd
 -- FIXME revisions?
 diffCmd :: String -> Version -> Version -> IO ()
 diffCmd pkg v1 v2 =
-  withTempDir $ \ _ -> do
+  withTempDir $ \ tmpdir -> do
+    setCurrentDirectory tmpdir
     let pkgid1 = PackageIdentifier (mkPackageName pkg) v1
         pkgid2 = PackageIdentifier (mkPackageName pkg) v2
     saveCabal pkgid1
