@@ -17,7 +17,9 @@ main =
     subcommands
     [ Subcommand "diff" "Diff .cabal files of package versions" $
       diffCmd <$> strArg "PKG" <*> versionArg <*> versionArg
-    , Subcommand "get" "get .cabal file for package version" $
+    , Subcommand "list" "List package versions" $
+      listPkg <$> pkgArg
+    , Subcommand "get" "Get .cabal file for package version" $
       saveCabal <$> pkgIdArg
     , Subcommand "depends" "Print package dependencies" $
       dependsCmd <$> switchWith 'q' "quiet" "No depends section headers"
@@ -34,6 +36,8 @@ main =
     pkgIdArg :: Parser PackageIdentifier
     pkgIdArg = argumentWith (maybeReader simpleParse) "PKG[VER]"
 
+    pkgArg :: Parser PackageName
+    pkgArg = argumentWith (maybeReader simpleParse) "PKG"
 
     detailOpt :: Parser Details
     detailOpt =

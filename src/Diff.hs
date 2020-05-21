@@ -1,7 +1,8 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE GADTs #-}
 
-module Diff (diffCmd, saveCabal) where
+module Diff (diffCmd, listPkg, saveCabal) where
 
 -- provided by simple-cmd-args 0.1.3
 --import Control.Applicative ((<|>))
@@ -21,6 +22,7 @@ import Distribution.Version
 import Hackage.Security.Client
 import qualified Hackage.Security.Client.Repository.Local as Local
 import qualified Hackage.Security.Util.Path as Path
+import Hackage.Security.Util.Some
 import qualified Hackage.Security.Client.Repository.Cache as Cache
 import Hackage.Security.Util.Pretty
 
@@ -46,20 +48,17 @@ saveCabal pkgId = do
   -- FIXME need to provide a version until have latest
   when ((pkgVersion pkgId) == nullVersion) $
     error' "Please specify the package version"
+  withLocalRepo $ \rep -> uncheckClientErrors $
+      withIndex rep $ \ IndexCallbacks{..} ->
+        trusted <$> indexLookupCabal pkgId >>= BL.writeFile (showPkgId pkgId <.> "cabal")
+
+withLocalRepo :: (Repository Local.LocalFile -> IO a) -> IO a
+withLocalRepo action = do
   home <- getHomeDirectory
   localrepo <- (Path.makeAbsolute . Path.fromFilePath) (home </> ".cabal")
   localcache <- (Path.makeAbsolute . Path.fromFilePath) (home </> ".cabal/packages/hackage.haskell.org")
-  withLocalRepo localrepo localcache $ \rep -> uncheckClientErrors $
-      withIndex rep $ \ IndexCallbacks{..} ->
-        trusted <$> indexLookupCabal pkgId >>= BL.writeFile (showPkgId pkgId <.> "cabal")
+  Local.withRepository localrepo (cache localcache) hackageRepoLayout hackageIndexLayout logTUF action
   where
-    withLocalRepo repo localcache =
-        Local.withRepository repo
-                             (cache localcache)
-                             hackageRepoLayout
-                             hackageIndexLayout
-                             logTUF
-
     -- FIXME could also support 00-index
     cache localcache = Cache.Cache {
         Cache.cacheRoot   = localcache
@@ -70,6 +69,22 @@ saveCabal pkgId = do
     }
 
     logTUF msg = putStrLn $ "# " ++ pretty msg
+
+listPkg :: PackageName -> IO ()
+listPkg pkg = do
+  withLocalRepo $ \rep -> uncheckClientErrors $ do
+    dir <- getDirectory rep
+    forM_ (directoryEntries dir) $ \ entry -> do
+      case third entry of
+        Just f -> case f of
+          Some (IndexPkgCabal pkgid) ->
+            when (pkgName pkgid == pkg) $
+                  putStrLn $ packageVersion pkgid
+          Some (IndexPkgMetadata _pkgid) -> return ()
+          Some (IndexPkgPrefs _prefer) -> return ()
+        Nothing -> return ()
+  where
+    third (_,_,c) = c
 
 #if (defined(MIN_VERSION_simple_cmd) && MIN_VERSION_simple_cmd(0,1,4))
 #else
