@@ -1,6 +1,7 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE RecordWildCards #-}
 
-module Diff (diffCmd) where
+module Diff (diffCmd, saveCabal) where
 
 -- provided by simple-cmd-args 0.1.3
 --import Control.Applicative ((<|>))
@@ -26,7 +27,7 @@ import Hackage.Security.Util.Pretty
 import SimpleCabal
 import SimpleCmd
 
-
+-- FIXME structural diff of PackageDescription
 -- FIXME revisions?
 diffCmd :: String -> Version -> Version -> IO ()
 diffCmd pkg v1 v2 =
@@ -42,6 +43,9 @@ diffCmd pkg v1 v2 =
 
 saveCabal :: PackageIdentifier -> IO ()
 saveCabal pkgId = do
+  -- FIXME need to provide a version until have latest
+  when ((pkgVersion pkgId) == nullVersion) $
+    error' "Please specify the package version"
   home <- getHomeDirectory
   localrepo <- (Path.makeAbsolute . Path.fromFilePath) (home </> ".cabal")
   localcache <- (Path.makeAbsolute . Path.fromFilePath) (home </> ".cabal/packages/hackage.haskell.org")
@@ -66,3 +70,13 @@ saveCabal pkgId = do
     }
 
     logTUF msg = putStrLn $ "# " ++ pretty msg
+
+#if (defined(MIN_VERSION_simple_cmd) && MIN_VERSION_simple_cmd(0,1,4))
+#else
+error' :: String -> a
+#if (defined(MIN_VERSION_base) && MIN_VERSION_base(4,9,0))
+error' = errorWithoutStackTrace
+#else
+error' = error
+#endif
+#endif

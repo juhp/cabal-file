@@ -1,9 +1,10 @@
 module Main where
 
 import Data.Version.Extra (readVersion)
+import Distribution.Package
+import Distribution.Text (simpleParse)
 import Distribution.Version
 import Options.Applicative
-
 import SimpleCmdArgs
 
 import Depends
@@ -16,6 +17,8 @@ main =
     subcommands
     [ Subcommand "diff" "Diff .cabal files of package versions" $
       diffCmd <$> strArg "PKG" <*> versionArg <*> versionArg
+    , Subcommand "get" "get .cabal file for package version" $
+      saveCabal <$> pkgIdArg
     , Subcommand "depends" "Print package dependencies" $
       dependsCmd <$> switchWith 'q' "quiet" "No depends section headers"
       <*> detailOpt
@@ -27,6 +30,10 @@ main =
     versionArg = argumentWith versionM "VERSION"
 
     versionM = maybeReader (Just . mkVersion' . readVersion)
+
+    pkgIdArg :: Parser PackageIdentifier
+    pkgIdArg = argumentWith (maybeReader simpleParse) "PKG[VER]"
+
 
     detailOpt :: Parser Details
     detailOpt =
