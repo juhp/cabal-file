@@ -2,7 +2,7 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE GADTs #-}
 
-module Index (diffCmd, listPkg, saveCabal) where
+module Index (diffCmd, listPkg, saveCabal, getMetaData) where
 
 -- provided by simple-cmd-args 0.1.3
 --import Control.Applicative ((<|>))
@@ -51,6 +51,15 @@ saveCabal pkgId = do
   withLocalRepo $ \rep -> uncheckClientErrors $
       withIndex rep $ \ IndexCallbacks{..} ->
         trusted <$> indexLookupCabal pkgId >>= BL.writeFile (showPkgId pkgId <.> "cabal")
+
+getMetaData :: PackageIdentifier -> IO ()
+getMetaData pkgId = do
+  -- FIXME need to provide a version until have latest
+  when ((pkgVersion pkgId) == nullVersion) $
+    error' "Please specify the package version"
+  withLocalRepo $ \rep -> uncheckClientErrors $
+      withIndex rep $ \ IndexCallbacks{..} ->
+        trusted <$> indexLookupMetadata pkgId >>= print
 
 withLocalRepo :: (Repository Local.LocalFile -> IO a) -> IO a
 withLocalRepo action = do

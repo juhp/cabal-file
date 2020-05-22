@@ -21,6 +21,8 @@ main =
       listPkg <$> pkgArg
     , Subcommand "get" "Get .cabal file for package version" $
       saveCabal <$> pkgIdArg
+    , Subcommand "metadata" "Get metadata for package version" $
+      getMetaData <$> pkgIdArg
     , Subcommand "depends" "Print package dependencies" $
       dependsCmd <$> switchWith 'q' "quiet" "No depends section headers"
       <*> detailOpt
