@@ -25,6 +25,8 @@ main =
       saveCabal <$> pkgIdArg
     , Subcommand "metadata" "Get metadata for package version" $
       getMetaData <$> pkgIdArg
+    , Subcommand "preferred" "Show preferred versions for package" $
+      preferredVersions <$> pkgArg
     , Subcommand "depends" "Print package dependencies" $
       dependsCmd <$> switchWith 'q' "quiet" "No depends section headers"
       <*> detailOpt

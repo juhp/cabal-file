@@ -2,12 +2,20 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE GADTs #-}
 
-module Index (diffCmd, listPkg, listFiles, saveCabal, getMetaData) where
+module Index (
+  diffCmd,
+  listPkg,
+  listFiles,
+  saveCabal,
+  getMetaData,
+  preferredVersions,
+  latestPkg
+  ) where
 
 -- provided by simple-cmd-args 0.1.3
 --import Control.Applicative ((<|>))
 import Control.Monad
-import qualified Data.ByteString.Lazy as BL
+import qualified Data.ByteString.Lazy.Char8 as BL
 import Data.List
 import Data.Maybe
 import Data.Version.Extra (readVersion)
@@ -124,6 +132,15 @@ listPkg pkgname = do
            then Just $ mkVersion' . readVersion $ takeFileName namever
            else Nothing
       else Nothing
+
+preferredVersions :: PackageName -> IO ()
+preferredVersions pkgname = do
+  withLocalRepo $ \rep -> uncheckClientErrors $
+      withIndex rep $ \ IndexCallbacks{..} -> do
+        mindexentry <- indexLookupFile (IndexPkgPrefs pkgname)
+        case mindexentry of
+          Nothing -> return ()
+          Just indexentry -> BL.putStrLn $ indexEntryContent indexentry
 
 listFiles :: IO ()
 listFiles = do
