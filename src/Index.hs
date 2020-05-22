@@ -155,6 +155,20 @@ listFiles = do
   where
     second (_,b,_) = b
 
+-- FIXME: take preferred-versions into account
+latestVersion :: PackageName -> IO (Maybe Version)
+latestVersion pkgname = do
+  versions <- packageVersions pkgname
+  if null versions then return Nothing
+    else return $ Just $ last versions
+
+latestPkg :: PackageName -> IO ()
+latestPkg pkgname = do
+  mversion <- latestVersion pkgname
+  case mversion of
+    Nothing -> return ()
+    Just version -> (putStrLn . showVersion) version
+
 #if (defined(MIN_VERSION_simple_cmd) && MIN_VERSION_simple_cmd(0,1,4))
 #else
 error' :: String -> a
