@@ -7,8 +7,8 @@ import Distribution.Version
 import Options.Applicative
 import SimpleCmdArgs
 
+import Cmds
 import Depends
-import Index
 
 main :: IO ()
 main =
@@ -25,10 +25,12 @@ main =
       pure listFiles
     , Subcommand "get" "Get .cabal file for package version" $
       saveCabal <$> pkgIdArg
+    , Subcommand "show" "show .cabal file for package version" $
+      showCabal <$> pkgIdArg
     , Subcommand "metadata" "Get metadata for package version" $
-      getMetaData <$> pkgIdArg
+      showMetadata <$> pkgIdArg
     , Subcommand "preferred" "Show preferred versions for package" $
-      preferredVersions <$> pkgArg
+      preferCmd <$> pkgArg
     , Subcommand "depends" "Print package dependencies" $
       dependsCmd <$> switchWith 'q' "quiet" "No depends section headers"
       <*> detailOpt

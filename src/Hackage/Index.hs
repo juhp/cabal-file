@@ -2,14 +2,14 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE GADTs #-}
 
-module Index (
-  diffCmd,
-  listPkg,
-  listFiles,
-  saveCabal,
-  getMetaData,
+module Hackage.Index (
+  getCabal,
+  getCabals,
+  getMetadata,
+  indexFiles,
+  latestVersion,
+  packageVersions,
   preferredVersions,
-  latestPkg
   ) where
 
 -- provided by simple-cmd-args 0.1.3
@@ -21,7 +21,6 @@ import Data.Maybe
 import Data.Version.Extra (readVersion)
 import System.Directory
 import System.FilePath
-import System.IO.Extra (withTempDir)
 
 --import Distribution.PackageDescription (Library(..), exeName, setupDepends)
 --import Distribution.Pretty
@@ -42,43 +41,38 @@ import Hackage.Security.Util.Pretty
 import SimpleCabal
 import SimpleCmd
 
--- FIXME structural diff of PackageDescription
--- FIXME revisions?
-diffCmd :: String -> Version -> Version -> IO ()
-diffCmd pkg v1 v2 =
-  withTempDir $ \ tmpdir -> do
-    setCurrentDirectory tmpdir
-    let pkgid1 = PackageIdentifier (mkPackageName pkg) v1
-        pkgid2 = PackageIdentifier (mkPackageName pkg) v2
-    saveCabals pkgid1 pkgid2
-    void $ cmdBool "diff" ["-u", showPkgId pkgid1 <.> "cabal", showPkgId pkgid2 <.> "cabal"]
-
---  pkgdesc <- finalPackageDescription [] cabal
-
-saveCabals :: PackageIdentifier -> PackageIdentifier -> IO ()
-saveCabals pkgId1 pkgId2 = do
-  withLocalRepo $ \rep -> uncheckClientErrors $
-      withIndex rep $ \ IndexCallbacks{..} -> do
-        trusted <$> indexLookupCabal pkgId1 >>= BL.writeFile (showPkgId pkgId1 <.> "cabal")
-        trusted <$> indexLookupCabal pkgId2 >>= BL.writeFile (showPkgId pkgId2 <.> "cabal")
-
-saveCabal :: PackageIdentifier -> IO ()
-saveCabal pkgId = do
+getCabal  :: PackageIdentifier -> IO BL.ByteString
+getCabal pkgid = do
   -- FIXME need to provide a version until have latest
-  when ((pkgVersion pkgId) == nullVersion) $
+  when (pkgVersion pkgid == nullVersion) $
+    error' "Please specify the package version"
+  withLocalRepo $ \rep -> uncheckClientErrors $
+    withIndex rep $ \ IndexCallbacks{..} ->
+    trusted <$> indexLookupCabal pkgid
+
+-- withCabalFile ?
+
+getCabals  :: PackageIdentifier -> PackageIdentifier
+           -> IO (BL.ByteString, BL.ByteString)
+getCabals pkgid1 pkgid2 = do
+  -- FIXME need to provide a version until have latest
+  when (pkgVersion pkgid1 == nullVersion ||
+        pkgVersion pkgid2 == nullVersion) $
+    error' "Please specify package version(s)"
+  withLocalRepo $ \rep -> uncheckClientErrors $
+    withIndex rep $ \ IndexCallbacks{..} -> do
+    bs1 <- trusted <$> indexLookupCabal pkgid1
+    bs2 <- trusted <$> indexLookupCabal pkgid2
+    return (bs1,bs2)
+
+getMetadata :: PackageIdentifier -> IO Targets
+getMetadata pkgid = do
+  -- FIXME need to provide a version until have latest
+  when (pkgVersion pkgid == nullVersion) $
     error' "Please specify the package version"
   withLocalRepo $ \rep -> uncheckClientErrors $
       withIndex rep $ \ IndexCallbacks{..} ->
-        trusted <$> indexLookupCabal pkgId >>= BL.writeFile (showPkgId pkgId <.> "cabal")
-
-getMetaData :: PackageIdentifier -> IO ()
-getMetaData pkgId = do
-  -- FIXME need to provide a version until have latest
-  when ((pkgVersion pkgId) == nullVersion) $
-    error' "Please specify the package version"
-  withLocalRepo $ \rep -> uncheckClientErrors $
-      withIndex rep $ \ IndexCallbacks{..} ->
-        trusted <$> indexLookupMetadata pkgId >>= print
+        trusted <$> indexLookupMetadata pkgid
 
 withLocalRepo :: (Repository Local.LocalFile -> IO a) -> IO a
 withLocalRepo action = do
@@ -98,28 +92,12 @@ withLocalRepo action = do
 
     logTUF msg = putStrLn $ "# " ++ pretty msg
 
--- listPkg :: PackageName -> IO ()
--- listPkg pkg = do
---   withLocalRepo $ \rep -> uncheckClientErrors $ do
---     dir <- getDirectory rep
---     forM_ (directoryEntries dir) $ \ entry -> do
---       case third entry of
---         Just f -> case f of
---           Some (IndexPkgCabal pkgid) ->
---             when (pkgName pkgid == pkg) $
---                   putStrLn $ packageVersion pkgid
---           Some (IndexPkgMetadata _pkgid) -> return ()
---           Some (IndexPkgPrefs _prefer) -> return ()
---         Nothing -> return ()
---   where
---     third (_,_,c) = c
-
 packageVersions :: PackageName -> IO [Version]
-packageVersions pkgname = do
+packageVersions pkgname =
   withLocalRepo $ \rep -> uncheckClientErrors $ do
     dir <- getDirectory rep
     let pkg = unPackageName pkgname
-    return $ sort . (mapMaybe (extractPkgVersion pkg . second)) $ directoryEntries dir
+    return $ sort . mapMaybe (extractPkgVersion pkg . second) $ directoryEntries dir
   where
     second (_,b,_) = b
 
@@ -127,47 +105,32 @@ packageVersions pkgname = do
     extractPkgVersion pkg path =
       if Path.takeExtension path == ".cabal" then
         let namever = (Path.toUnrootedFilePath . Path.unrootPath . Path.takeDirectory) path
-        in if (takeDirectory namever == pkg)
+        in if takeDirectory namever == pkg
            then Just $ mkVersion' . readVersion $ takeFileName namever
            else Nothing
       else Nothing
 
-listPkg :: PackageName -> IO ()
-listPkg pkgname = do
-  versions <- packageVersions pkgname
-  mapM_ (putStrLn . showVersion) versions
-
-preferredVersions :: PackageName -> IO ()
-preferredVersions pkgname = do
+preferredVersions :: PackageName -> IO (Maybe BL.ByteString)
+preferredVersions pkgname =
   withLocalRepo $ \rep -> uncheckClientErrors $
-      withIndex rep $ \ IndexCallbacks{..} -> do
-        mindexentry <- indexLookupFile (IndexPkgPrefs pkgname)
-        case mindexentry of
-          Nothing -> return ()
-          Just indexentry -> BL.putStrLn $ indexEntryContent indexentry
+    withIndex rep $ \ IndexCallbacks{..} ->
+    fmap indexEntryContent <$> indexLookupFile (IndexPkgPrefs pkgname)
 
-listFiles :: IO ()
-listFiles = do
+indexFiles :: IO [String]
+indexFiles =
   withLocalRepo $ \rep -> uncheckClientErrors $ do
     dir <- getDirectory rep
-    forM_ (directoryEntries dir) $ \ entry -> do
-      putStrLn $ (Path.toUnrootedFilePath . Path.unrootPath) $ second entry
+    return $ map dirEntryPath (directoryEntries dir)
   where
     second (_,b,_) = b
 
+    dirEntryPath = Path.toUnrootedFilePath . Path.unrootPath . second
 -- FIXME: take preferred-versions into account
 latestVersion :: PackageName -> IO (Maybe Version)
 latestVersion pkgname = do
   versions <- packageVersions pkgname
   if null versions then return Nothing
     else return $ Just $ last versions
-
-latestPkg :: PackageName -> IO ()
-latestPkg pkgname = do
-  mversion <- latestVersion pkgname
-  case mversion of
-    Nothing -> return ()
-    Just version -> (putStrLn . showVersion) version
 
 #if (defined(MIN_VERSION_simple_cmd) && MIN_VERSION_simple_cmd(0,1,4))
 #else
