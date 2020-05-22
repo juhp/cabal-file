@@ -37,11 +37,17 @@ diffCmd pkg v1 v2 =
     setCurrentDirectory tmpdir
     let pkgid1 = PackageIdentifier (mkPackageName pkg) v1
         pkgid2 = PackageIdentifier (mkPackageName pkg) v2
-    saveCabal pkgid1
-    saveCabal pkgid2
+    saveCabals pkgid1 pkgid2
     void $ cmdBool "diff" ["-u", showPkgId pkgid1 <.> "cabal", showPkgId pkgid2 <.> "cabal"]
 
 --  pkgdesc <- finalPackageDescription [] cabal
+
+saveCabals :: PackageIdentifier -> PackageIdentifier -> IO ()
+saveCabals pkgId1 pkgId2 = do
+  withLocalRepo $ \rep -> uncheckClientErrors $
+      withIndex rep $ \ IndexCallbacks{..} -> do
+        trusted <$> indexLookupCabal pkgId1 >>= BL.writeFile (showPkgId pkgId1 <.> "cabal")
+        trusted <$> indexLookupCabal pkgId2 >>= BL.writeFile (showPkgId pkgId2 <.> "cabal")
 
 saveCabal :: PackageIdentifier -> IO ()
 saveCabal pkgId = do
