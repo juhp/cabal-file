@@ -107,20 +107,20 @@ withLocalRepo action = do
 --     third (_,_,c) = c
 
 listPkg :: PackageName -> IO ()
-listPkg pkg = do
+listPkg pkgname = do
   withLocalRepo $ \rep -> uncheckClientErrors $ do
     dir <- getDirectory rep
-    let versions =
-          sort . (mapMaybe (extractPkgVersion . second)) $ directoryEntries dir
+    let pkg = unPackageName pkgname
+        versions = sort . (mapMaybe (extractPkgVersion pkg . second)) $ directoryEntries dir
     mapM_ (putStrLn . showVersion) versions
   where
     second (_,b,_) = b
 
-    extractPkgVersion :: IndexPath -> Maybe Version
-    extractPkgVersion path =
-      if (Path.takeExtension path == ".cabal") then
+    extractPkgVersion :: String -> IndexPath -> Maybe Version
+    extractPkgVersion pkg path =
+      if Path.takeExtension path == ".cabal" then
         let namever = (Path.toUnrootedFilePath . Path.unrootPath . Path.takeDirectory) path
-        in if (takeDirectory namever == unPackageName pkg)
+        in if (takeDirectory namever == pkg)
            then Just $ mkVersion' . readVersion $ takeFileName namever
            else Nothing
       else Nothing
