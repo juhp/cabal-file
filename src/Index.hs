@@ -2,7 +2,7 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE GADTs #-}
 
-module Index (diffCmd, listPkg, saveCabal, getMetaData) where
+module Index (diffCmd, listPkg, listFiles, saveCabal, getMetaData) where
 
 -- provided by simple-cmd-args 0.1.3
 --import Control.Applicative ((<|>))
@@ -124,6 +124,15 @@ listPkg pkg = do
            then Just $ mkVersion' . readVersion $ takeFileName namever
            else Nothing
       else Nothing
+
+listFiles :: IO ()
+listFiles = do
+  withLocalRepo $ \rep -> uncheckClientErrors $ do
+    dir <- getDirectory rep
+    forM_ (directoryEntries dir) $ \ entry -> do
+      putStrLn $ (Path.toUnrootedFilePath . Path.unrootPath) $ second entry
+  where
+    second (_,b,_) = b
 
 #if (defined(MIN_VERSION_simple_cmd) && MIN_VERSION_simple_cmd(0,1,4))
 #else

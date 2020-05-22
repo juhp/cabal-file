@@ -19,6 +19,8 @@ main =
       diffCmd <$> strArg "PKG" <*> versionArg <*> versionArg
     , Subcommand "list" "List package versions" $
       listPkg <$> pkgArg
+    , Subcommand "files" "List all index files" $
+      pure listFiles
     , Subcommand "get" "Get .cabal file for package version" $
       saveCabal <$> pkgIdArg
     , Subcommand "metadata" "Get metadata for package version" $
