@@ -114,13 +114,12 @@ withLocalRepo action = do
 --   where
 --     third (_,_,c) = c
 
-listPkg :: PackageName -> IO ()
-listPkg pkgname = do
+packageVersions :: PackageName -> IO [Version]
+packageVersions pkgname = do
   withLocalRepo $ \rep -> uncheckClientErrors $ do
     dir <- getDirectory rep
     let pkg = unPackageName pkgname
-        versions = sort . (mapMaybe (extractPkgVersion pkg . second)) $ directoryEntries dir
-    mapM_ (putStrLn . showVersion) versions
+    return $ sort . (mapMaybe (extractPkgVersion pkg . second)) $ directoryEntries dir
   where
     second (_,b,_) = b
 
@@ -132,6 +131,11 @@ listPkg pkgname = do
            then Just $ mkVersion' . readVersion $ takeFileName namever
            else Nothing
       else Nothing
+
+listPkg :: PackageName -> IO ()
+listPkg pkgname = do
+  versions <- packageVersions pkgname
+  mapM_ (putStrLn . showVersion) versions
 
 preferredVersions :: PackageName -> IO ()
 preferredVersions pkgname = do
