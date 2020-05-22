@@ -8,8 +8,9 @@ module Index (diffCmd, listPkg, saveCabal, getMetaData) where
 --import Control.Applicative ((<|>))
 import Control.Monad
 import qualified Data.ByteString.Lazy as BL
---import Data.List
---import Data.Maybe
+import Data.List
+import Data.Maybe
+import Data.Version.Extra (readVersion)
 import System.Directory
 import System.FilePath
 import System.IO.Extra (withTempDir)
@@ -19,10 +20,14 @@ import System.IO.Extra (withTempDir)
 --import Distribution.Simple.BuildToolDepends (getAllToolDependencies)
 --import Distribution.Types.ExeDependency
 import Distribution.Version
+#if MIN_VERSION_Cabal(3,0,0)
+#else
+  hiding (showVersion)
+#endif
 import Hackage.Security.Client
 import qualified Hackage.Security.Client.Repository.Local as Local
 import qualified Hackage.Security.Util.Path as Path
-import Hackage.Security.Util.Some
+--import Hackage.Security.Util.Some
 import qualified Hackage.Security.Client.Repository.Cache as Cache
 import Hackage.Security.Util.Pretty
 
@@ -85,21 +90,40 @@ withLocalRepo action = do
 
     logTUF msg = putStrLn $ "# " ++ pretty msg
 
+-- listPkg :: PackageName -> IO ()
+-- listPkg pkg = do
+--   withLocalRepo $ \rep -> uncheckClientErrors $ do
+--     dir <- getDirectory rep
+--     forM_ (directoryEntries dir) $ \ entry -> do
+--       case third entry of
+--         Just f -> case f of
+--           Some (IndexPkgCabal pkgid) ->
+--             when (pkgName pkgid == pkg) $
+--                   putStrLn $ packageVersion pkgid
+--           Some (IndexPkgMetadata _pkgid) -> return ()
+--           Some (IndexPkgPrefs _prefer) -> return ()
+--         Nothing -> return ()
+--   where
+--     third (_,_,c) = c
+
 listPkg :: PackageName -> IO ()
 listPkg pkg = do
   withLocalRepo $ \rep -> uncheckClientErrors $ do
     dir <- getDirectory rep
-    forM_ (directoryEntries dir) $ \ entry -> do
-      case third entry of
-        Just f -> case f of
-          Some (IndexPkgCabal pkgid) ->
-            when (pkgName pkgid == pkg) $
-                  putStrLn $ packageVersion pkgid
-          Some (IndexPkgMetadata _pkgid) -> return ()
-          Some (IndexPkgPrefs _prefer) -> return ()
-        Nothing -> return ()
+    let versions =
+          sort . (mapMaybe (extractPkgVersion . second)) $ directoryEntries dir
+    mapM_ (putStrLn . showVersion) versions
   where
-    third (_,_,c) = c
+    second (_,b,_) = b
+
+    extractPkgVersion :: IndexPath -> Maybe Version
+    extractPkgVersion path =
+      if (Path.takeExtension path == ".cabal") then
+        let namever = (Path.toUnrootedFilePath . Path.unrootPath . Path.takeDirectory) path
+        in if (takeDirectory namever == unPackageName pkg)
+           then Just $ mkVersion' . readVersion $ takeFileName namever
+           else Nothing
+      else Nothing
 
 #if (defined(MIN_VERSION_simple_cmd) && MIN_VERSION_simple_cmd(0,1,4))
 #else
