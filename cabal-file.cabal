@@ -16,7 +16,7 @@ executable cbl-file
   main-is:             Main.hs
   other-modules:       Depends
                        Index
-  hs-source-dirs:      . src
+  hs-source-dirs:      src
   build-depends:       base < 5,
                        bytestring,
                        Cabal > 2.2,
