@@ -5,11 +5,14 @@
 module Hackage.Index (
   getCabal,
   getCabals,
+  withCabalFile,
   getMetadata,
   indexFiles,
   latestVersion,
   packageVersions,
   preferredVersions,
+  getPackageDescription,
+  getPackageDescription'
   ) where
 
 -- provided by simple-cmd-args 0.1.3
@@ -21,6 +24,7 @@ import Data.Maybe
 import Data.Version.Extra (readVersion)
 import System.Directory
 import System.FilePath
+import System.IO.Extra (withTempDir)
 
 --import Distribution.PackageDescription (Library(..), exeName, setupDepends)
 --import Distribution.Pretty
@@ -50,7 +54,13 @@ getCabal pkgid = do
     withIndex rep $ \ IndexCallbacks{..} ->
     trusted <$> indexLookupCabal pkgid
 
--- withCabalFile ?
+withCabalFile :: PackageIdentifier -> (FilePath -> IO a) -> IO a
+withCabalFile pkgid act =
+  withTempDir $ \ tmpdir -> do
+    bs <- getCabal pkgid
+    let filepath = tmpdir </> showPkgId pkgid <.> "cabal"
+    BL.writeFile filepath bs
+    act filepath
 
 getCabals  :: PackageIdentifier -> PackageIdentifier
            -> IO (BL.ByteString, BL.ByteString)
@@ -73,6 +83,21 @@ getMetadata pkgid = do
   withLocalRepo $ \rep -> uncheckClientErrors $
       withIndex rep $ \ IndexCallbacks{..} ->
         trusted <$> indexLookupMetadata pkgid
+
+getPackageDescription :: PackageIdentifier -> IO (Maybe PackageDescription)
+getPackageDescription pkgid =
+#if (defined(MIN_VERSION_simple_cabal) && MIN_VERSION_simple_cabal(0,1,2))
+  do
+  cabal <- getCabal pkgid
+  parseFinalPackageDescription [] $ BL.toStrict cabal
+#else
+  Just <$> withCabalFile pkgid (finalPackageDescription [])
+#endif
+
+getPackageDescription' :: PackageIdentifier -> IO PackageDescription
+getPackageDescription' pkgid = do
+  mfpd <- getPackageDescription pkgid
+  maybe (error' "Failed to parse cabal file") return mfpd
 
 withLocalRepo :: (Repository Local.LocalFile -> IO a) -> IO a
 withLocalRepo action = do
