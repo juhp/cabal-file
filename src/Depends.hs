@@ -13,6 +13,7 @@ import System.FilePath
 import Distribution.PackageDescription (Library(..), exeName, setupDepends)
 import Distribution.Pretty
 import Distribution.Simple.BuildToolDepends (getAllToolDependencies)
+import Distribution.Text (simpleParse)
 import Distribution.Types.ExeDependency
 
 import SimpleCabal (allBuildInfo, buildDepends, buildDependencies, buildTools,

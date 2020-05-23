@@ -28,6 +28,7 @@ executable cbl-file
                        optparse-applicative,
                        simple-cabal > 0.1,
                        simple-cmd,
-                       simple-cmd-args >= 0.1.2
+                       simple-cmd-args >= 0.1.2,
+                       time
   default-language:    Haskell2010
   ghc-options:         -Wall

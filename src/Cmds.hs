@@ -6,7 +6,8 @@ module Cmds (
   latestPkg,
   listFiles,
   preferCmd,
-  showMetadata
+  showMetadata,
+  dateCabal
   ) where
 
 import Control.Monad
@@ -70,3 +71,8 @@ preferCmd :: PackageName -> IO ()
 preferCmd pkgname = do
   mbs <- preferredVersions pkgname
   maybe (return ()) BL.putStrLn mbs
+
+dateCabal :: PackageIdentifier -> IO ()
+dateCabal pkgid = do
+  mtime <- getTimestamp pkgid
+  maybe (return ()) print mtime

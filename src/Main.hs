@@ -25,6 +25,8 @@ main =
       pure listFiles
     , Subcommand "get" "Get .cabal file for package version" $
       saveCabal <$> pkgIdArg
+    , Subcommand "date" "Timestamp for package version (revision)" $
+      dateCabal <$> pkgIdArg
     , Subcommand "show" "show .cabal file for package version" $
       showCabal <$> pkgIdArg
     , Subcommand "metadata" "Get metadata for package version" $

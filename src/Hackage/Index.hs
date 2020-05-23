@@ -7,6 +7,7 @@ module Hackage.Index (
   getCabals,
   withCabalFile,
   getMetadata,
+  getTimestamp,
   indexFiles,
   latestVersion,
   packageVersions,
@@ -21,6 +22,8 @@ import Control.Monad
 import qualified Data.ByteString.Lazy.Char8 as BL
 import Data.List
 import Data.Maybe
+import Data.Time.Clock
+import Data.Time.Clock.POSIX
 import Data.Version.Extra (readVersion)
 import System.Directory
 import System.FilePath
@@ -156,6 +159,14 @@ latestVersion pkgname = do
   versions <- packageVersions pkgname
   if null versions then return Nothing
     else return $ Just $ last versions
+
+getTimestamp :: PackageIdentifier -> IO (Maybe UTCTime)
+getTimestamp pkgid =
+  withLocalRepo $ \rep -> uncheckClientErrors $
+    withIndex rep $ \ IndexCallbacks{..} ->
+    fmap (posixSecondsToUTCTime . realToFrac . indexEntryTime) <$>
+    indexLookupFile (IndexPkgCabal pkgid)
+
 
 #if (defined(MIN_VERSION_simple_cmd) && MIN_VERSION_simple_cmd(0,1,4))
 #else
