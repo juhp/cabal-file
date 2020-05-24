@@ -65,6 +65,16 @@ For library documentation see the [Hackage.Index](https://hackage.haskell.org/pa
 
 For example usage see `app/Cmds.hs`.
 
+## Motivation
+I originally wrote the `depends` command for displaying dependency information
+about packages in a more friendly way.
+
+Later, since [hdiff](http://hdiff.luite.com/) is no longer actively updated,
+and I particularly want it for comparing .cabal file versions,
+I decided to create the `diff` command.
+Realising I could pull .cabal files direct from the cabal index cache,
+the rest of cabal-file flowed on from there.
+
 ## Related
 If you want full diffs of Hackage sources you can try out cabal-diff from
 [cabal-extras](https://github.com/phadej/cabal-extras).
