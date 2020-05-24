@@ -25,9 +25,9 @@ main =
       saveCabal <$> pkgIdArg
     , Subcommand "date" "Timestamp for package version (revision)" $
       dateCabal <$> pkgIdArg
-    , Subcommand "show" "show .cabal file for package version" $
+    , Subcommand "show" "Show .cabal file for package version" $
       showCabal <$> pkgIdArg
-    , Subcommand "metadata" "Get metadata for package version" $
+    , Subcommand "metadata" "Show metadata for package version" $
       showMetadata <$> pkgIdArg
     , Subcommand "preferred" "Show preferred versions for package" $
       preferCmd <$> pkgArg
