@@ -1,7 +1,12 @@
 name:                cabal-file
 version:             0.1.0
 synopsis:            Cabal file access
--- description:
+description:
+        cabal-file is a small library on top of the 'hackage-security' library
+        for accessing the local Hackage repo index, and a command-line tool
+        'cblfile' which can diff .cabal versions, list package versions,
+        save a cabal file, and show metadata from the index. It also uses
+        simple-cabal to display package dependencies.
 license:             BSD3
 license-file:        LICENSE
 author:              Jens Petersen
@@ -12,23 +17,63 @@ build-type:          Simple
 extra-source-files:  ChangeLog.md
 cabal-version:       >=1.10
 
-executable cbl-file
+executable cblfile
   main-is:             Main.hs
   other-modules:       Cmds
                        Depends
-                       Hackage.Index
-  hs-source-dirs:      src
-  build-depends:       base < 5,
-                       bytestring,
-                       Cabal > 2.2,
-                       directory,
-                       extra,
-                       filepath,
-                       hackage-security,
-                       optparse-applicative,
-                       simple-cabal > 0.1,
-                       simple-cmd,
-                       simple-cmd-args >= 0.1.2,
-                       time
+  hs-source-dirs:      app
+  build-depends:       base < 5
+                     , bytestring
+                     , Cabal > 2.2
+                     , cabal-file
+                     , directory
+                     , extra
+                     , filepath
+                     , optparse-applicative
+                     , simple-cabal > 0.1
+                     , simple-cmd
+                     , simple-cmd-args >= 0.1.2
   default-language:    Haskell2010
   ghc-options:         -Wall
+  if impl(ghc >= 8.0)
+    ghc-options:       -Wcompat
+                       -Widentities
+                       -Wincomplete-uni-patterns
+                       -Wincomplete-record-updates
+                       -Wredundant-constraints
+  if impl(ghc >= 8.2)
+    ghc-options:       -fhide-source-paths
+  if impl(ghc >= 8.4)
+    ghc-options:       -Wmissing-export-lists
+                       -Wpartial-fields
+
+library
+  build-depends:       base < 5
+                     , bytestring
+                     , Cabal > 2.2
+                     , directory
+                     , extra
+                     , filepath
+                     , hackage-security
+                     , optparse-applicative
+                     , simple-cabal > 0.1
+                     , simple-cmd
+                     , time
+  exposed-modules:     Hackage.Index
+  hs-source-dirs:      src
+
+  ghc-options:         -Wall
+  if impl(ghc >= 8.0)
+    ghc-options:       -Wcompat
+                       -Widentities
+                       -Wincomplete-uni-patterns
+                       -Wincomplete-record-updates
+                       -Wredundant-constraints
+  if impl(ghc >= 8.2)
+    ghc-options:       -fhide-source-paths
+  if impl(ghc >= 8.4)
+    ghc-options:       -Wmissing-export-lists
+                       -Wpartial-fields
+
+  default-language:    Haskell2010
+  default-extensions:  OverloadedStrings

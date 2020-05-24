@@ -1,5 +1,3 @@
-module Main where
-
 import Data.Version.Extra (readVersion)
 import Distribution.Package
 import Distribution.Text (simpleParse)
