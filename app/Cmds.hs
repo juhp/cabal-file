@@ -11,6 +11,7 @@ module Cmds (
   ) where
 
 import Control.Monad
+import Control.Monad.Extra
 import qualified Data.ByteString.Lazy.Char8 as BL
 import Distribution.Version (Version)
 import SimpleCabal
@@ -58,7 +59,11 @@ showCabal pkgid = do
 showMetadata :: PackageIdentifier -> IO ()
 showMetadata pkgid = do
   pkgver <- packageIdOrLatest pkgid
-  getMetadata pkgver >>= print
+  finfo <- getFileInfo pkgver
+  let bytes = show . fileLength . fileInfoLength
+  putStrLn $ "Size: " ++ bytes finfo
+  whenJust (fileInfoSHA256 finfo) $ \ hash ->
+    putStrLn $ "SHA256 " ++ show hash
 
 latestPkg :: PackageName -> IO ()
 latestPkg pkgname = do

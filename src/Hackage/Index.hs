@@ -6,7 +6,7 @@ module Hackage.Index (
   getCabal,
   getCabals,
   withCabalFile,
-  getMetadata,
+  getFileInfo,
   getTimestamp,
   indexFiles,
   latestVersion,
@@ -15,6 +15,9 @@ module Hackage.Index (
   getPackageDescription,
   getPackageDescription',
   packageIdOrLatest,
+  FileInfo(..),
+  FileLength(..),
+  fileInfoSHA256
   ) where
 
 import qualified Data.ByteString.Lazy.Char8 as BL
@@ -67,11 +70,12 @@ getCabals pkgid1 pkgid2 =
     bs2 <- trusted <$> indexLookupCabal pkgid2
     return (bs1,bs2)
 
-getMetadata :: PackageIdentifier -> IO Targets
-getMetadata pkgid = do
+-- Get FileInfo metadata for package version source
+getFileInfo :: PackageIdentifier -> IO FileInfo
+getFileInfo pkgid =
   withLocalRepo $ \rep -> uncheckClientErrors $
       withIndex rep $ \ IndexCallbacks{..} ->
-        trusted <$> indexLookupMetadata pkgid
+        trusted <$> indexLookupFileInfo pkgid
 
 -- | Get and try to parse the PackageIdentifier of a package version
 getPackageDescription :: PackageIdentifier -> IO (Maybe PackageDescription)
