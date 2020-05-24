@@ -16,7 +16,6 @@ module Hackage.Index (
   getPackageDescription'
   ) where
 
-import Control.Monad
 import qualified Data.ByteString.Lazy.Char8 as BL
 import Data.List
 import Data.Maybe
@@ -40,15 +39,9 @@ import qualified Hackage.Security.Client.Repository.Cache as Cache
 import Hackage.Security.Util.Pretty
 
 import SimpleCabal
-#if (defined(MIN_VERSION_simple_cmd) && MIN_VERSION_simple_cmd(0,1,4))
-import SimpleCmd (error')
-#endif
 
 getCabal  :: PackageIdentifier -> IO BL.ByteString
-getCabal pkgid = do
-  -- FIXME need to provide a version until have latest
-  when (pkgVersion pkgid == nullVersion) $
-    error' "Please specify the package version"
+getCabal pkgid =
   withLocalRepo $ \rep -> uncheckClientErrors $
     withIndex rep $ \ IndexCallbacks{..} ->
     trusted <$> indexLookupCabal pkgid
@@ -63,11 +56,7 @@ withCabalFile pkgid act =
 
 getCabals  :: PackageIdentifier -> PackageIdentifier
            -> IO (BL.ByteString, BL.ByteString)
-getCabals pkgid1 pkgid2 = do
-  -- FIXME need to provide a version until have latest
-  when (pkgVersion pkgid1 == nullVersion ||
-        pkgVersion pkgid2 == nullVersion) $
-    error' "Please specify package version(s)"
+getCabals pkgid1 pkgid2 =
   withLocalRepo $ \rep -> uncheckClientErrors $
     withIndex rep $ \ IndexCallbacks{..} -> do
     bs1 <- trusted <$> indexLookupCabal pkgid1
@@ -76,9 +65,6 @@ getCabals pkgid1 pkgid2 = do
 
 getMetadata :: PackageIdentifier -> IO Targets
 getMetadata pkgid = do
-  -- FIXME need to provide a version until have latest
-  when (pkgVersion pkgid == nullVersion) $
-    error' "Please specify the package version"
   withLocalRepo $ \rep -> uncheckClientErrors $
       withIndex rep $ \ IndexCallbacks{..} ->
         trusted <$> indexLookupMetadata pkgid
@@ -93,10 +79,11 @@ getPackageDescription pkgid =
   Just <$> withCabalFile pkgid (finalPackageDescription [])
 #endif
 
+-- Raises an error on failure.
 getPackageDescription' :: PackageIdentifier -> IO PackageDescription
 getPackageDescription' pkgid = do
   mfpd <- getPackageDescription pkgid
-  maybe (error' "Failed to parse cabal file") return mfpd
+  maybe (error "Failed to parse cabal file") return mfpd
 
 withLocalRepo :: (Repository Local.LocalFile -> IO a) -> IO a
 withLocalRepo action = do
@@ -163,13 +150,3 @@ getTimestamp pkgid =
     fmap (posixSecondsToUTCTime . realToFrac . indexEntryTime) <$>
     indexLookupFile (IndexPkgCabal pkgid)
 
-
-#if (defined(MIN_VERSION_simple_cmd) && MIN_VERSION_simple_cmd(0,1,4))
-#else
-error' :: String -> a
-#if (defined(MIN_VERSION_base) && MIN_VERSION_base(4,9,0))
-error' = errorWithoutStackTrace
-#else
-error' = error
-#endif
-#endif
