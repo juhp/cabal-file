@@ -68,9 +68,8 @@ showMetadata pkgid = do
     putStrLn $ "SHA256 " ++ show hash
 
 latestPkg :: PackageName -> IO ()
-latestPkg pkgname = do
-  mversion <- latestVersion pkgname
-  maybe (return ()) (putStrLn . showVersion) mversion
+latestPkg pkgname =
+  whenJustM (latestVersion pkgname) (putStrLn . showVersion)
 
 listFiles :: IO ()
 listFiles = do
@@ -78,12 +77,10 @@ listFiles = do
   mapM_ putStrLn files
 
 preferCmd :: PackageName -> IO ()
-preferCmd pkgname = do
-  mbs <- preferredVersions pkgname
-  maybe (return ()) BL.putStrLn mbs
+preferCmd pkgname =
+  whenJustM (preferredVersions pkgname) BL.putStrLn
 
 dateCabal :: PackageIdentifier -> IO ()
 dateCabal pkgid = do
   pkgver <- packageIdOrLatest pkgid
-  mtime <- getTimestamp pkgver
-  maybe (return ()) print mtime
+  whenJustM (getTimestamp pkgver) print
