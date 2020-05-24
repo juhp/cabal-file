@@ -13,7 +13,8 @@ module Hackage.Index (
   packageVersions,
   preferredVersions,
   getPackageDescription,
-  getPackageDescription'
+  getPackageDescription',
+  packageIdOrLatest,
   ) where
 
 import qualified Data.ByteString.Lazy.Char8 as BL
@@ -150,3 +151,11 @@ getTimestamp pkgid =
     fmap (posixSecondsToUTCTime . realToFrac . indexEntryTime) <$>
     indexLookupFile (IndexPkgCabal pkgid)
 
+-- | Convert an unversioned PackageID to latest version
+packageIdOrLatest :: PackageIdentifier -> IO PackageIdentifier
+packageIdOrLatest pkgid = do
+  let name = pkgName pkgid
+  if pkgVersion pkgid == nullVersion then do
+    mlatest <- latestVersion name
+    return $ maybe pkgid (PackageIdentifier name) mlatest
+    else return pkgid

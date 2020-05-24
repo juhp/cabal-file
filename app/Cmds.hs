@@ -46,16 +46,19 @@ listPkg pkgname = do
   mapM_ (putStrLn . showVersion) versions
 
 saveCabal :: PackageIdentifier -> IO ()
-saveCabal pkgid =
-  getCabal pkgid >>= BL.writeFile (showPkgId pkgid <.> "cabal")
+saveCabal pkgid = do
+  pkgver <- packageIdOrLatest pkgid
+  getCabal pkgver >>= BL.writeFile (showPkgId pkgid <.> "cabal")
 
 showCabal :: PackageIdentifier -> IO ()
-showCabal pkgid =
-  getCabal pkgid >>= BL.putStrLn
+showCabal pkgid = do
+  pkgver <- packageIdOrLatest pkgid
+  getCabal pkgver >>= BL.putStrLn
 
 showMetadata :: PackageIdentifier -> IO ()
-showMetadata pkgid =
-  getMetadata pkgid >>= print
+showMetadata pkgid = do
+  pkgver <- packageIdOrLatest pkgid
+  getMetadata pkgver >>= print
 
 latestPkg :: PackageName -> IO ()
 latestPkg pkgname = do
@@ -74,5 +77,6 @@ preferCmd pkgname = do
 
 dateCabal :: PackageIdentifier -> IO ()
 dateCabal pkgid = do
-  mtime <- getTimestamp pkgid
+  pkgver <- packageIdOrLatest pkgid
+  mtime <- getTimestamp pkgver
   maybe (return ()) print mtime
