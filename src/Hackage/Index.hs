@@ -16,8 +16,6 @@ module Hackage.Index (
   getPackageDescription'
   ) where
 
--- provided by simple-cmd-args 0.1.3
---import Control.Applicative ((<|>))
 import Control.Monad
 import qualified Data.ByteString.Lazy.Char8 as BL
 import Data.List
@@ -29,10 +27,6 @@ import System.Directory
 import System.FilePath
 import System.IO.Extra (withTempDir)
 
---import Distribution.PackageDescription (Library(..), exeName, setupDepends)
---import Distribution.Pretty
---import Distribution.Simple.BuildToolDepends (getAllToolDependencies)
---import Distribution.Types.ExeDependency
 import Distribution.Version
 #if MIN_VERSION_Cabal(3,0,0)
 #else
@@ -46,7 +40,9 @@ import qualified Hackage.Security.Client.Repository.Cache as Cache
 import Hackage.Security.Util.Pretty
 
 import SimpleCabal
-import SimpleCmd
+#if (defined(MIN_VERSION_simple_cmd) && MIN_VERSION_simple_cmd(0,1,4))
+import SimpleCmd (error')
+#endif
 
 getCabal  :: PackageIdentifier -> IO BL.ByteString
 getCabal pkgid = do
