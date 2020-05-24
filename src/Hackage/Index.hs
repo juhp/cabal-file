@@ -10,6 +10,7 @@ module Hackage.Index (
   getTimestamp,
   indexFiles,
   latestVersion,
+  listPackages,
   packageVersions,
   preferredVersions,
   getPackageDescription,
@@ -178,3 +179,17 @@ packageIdOrLatest pkgid = do
     mlatest <- latestVersion name
     return $ maybe pkgid (PackageIdentifier name) mlatest
     else return pkgid
+
+-- | List all packages in the index (unsorted for performance)
+listPackages :: IO [String]
+listPackages =
+  withLocalRepo $ \rep -> uncheckClientErrors $ do
+    dir <- getDirectory rep
+    return $ nub $ mapMaybe (extractPkg . second) (directoryEntries dir)
+  where
+    extractPkg path =
+      if Path.takeExtension path == ".cabal" then
+        (Just . takeWhile (/= '/') . Path.toUnrootedFilePath . Path.unrootPath) path
+        else Nothing
+
+    second (_,b,_) = b

@@ -16,7 +16,7 @@ main =
     [ Subcommand "diff" "Diff .cabal files of package versions" $
       diffCmd <$> strArg "PKG" <*> versionArg <*> versionArg
     , Subcommand "list" "List package versions" $
-      listPkg <$> pkgArg
+      listPkg <$> optional pkgArg
     , Subcommand "latest" "Latest package version" $
       latestPkg <$> pkgArg
     , Subcommand "files" "List all index files" $

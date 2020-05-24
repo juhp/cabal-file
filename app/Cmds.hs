@@ -13,6 +13,7 @@ module Cmds (
 import Control.Monad
 import Control.Monad.Extra
 import qualified Data.ByteString.Lazy.Char8 as BL
+import Data.List
 import Distribution.Version (Version)
 import SimpleCabal
 import SimpleCmd
@@ -41,10 +42,11 @@ diffCmd pkg v1 v2 =
       BL.writeFile (showPkgId pkgid1 <.> "cabal") bs1
       BL.writeFile (showPkgId pkgid2 <.> "cabal") bs2
 
-listPkg :: PackageName -> IO ()
-listPkg pkgname = do
+listPkg :: Maybe PackageName -> IO ()
+listPkg (Just pkgname) = do
   versions <- packageVersions pkgname
   mapM_ (putStrLn . showVersion) versions
+listPkg Nothing = fmap sort listPackages >>= mapM_ putStrLn
 
 saveCabal :: PackageIdentifier -> IO ()
 saveCabal pkgid = do
