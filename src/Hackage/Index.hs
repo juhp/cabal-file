@@ -41,12 +41,14 @@ import Hackage.Security.Util.Pretty
 
 import SimpleCabal
 
+-- | Get the contents of a .cabal file for package version
 getCabal  :: PackageIdentifier -> IO BL.ByteString
 getCabal pkgid =
   withLocalRepo $ \rep -> uncheckClientErrors $
     withIndex rep $ \ IndexCallbacks{..} ->
     trusted <$> indexLookupCabal pkgid
 
+-- | Pass a temporary copy of .cabal file to some action
 withCabalFile :: PackageIdentifier -> (FilePath -> IO a) -> IO a
 withCabalFile pkgid act =
   withTempDir $ \ tmpdir -> do
@@ -55,6 +57,7 @@ withCabalFile pkgid act =
     BL.writeFile filepath bs
     act filepath
 
+-- | Get two .cabal files at once!
 getCabals  :: PackageIdentifier -> PackageIdentifier
            -> IO (BL.ByteString, BL.ByteString)
 getCabals pkgid1 pkgid2 =
@@ -70,6 +73,7 @@ getMetadata pkgid = do
       withIndex rep $ \ IndexCallbacks{..} ->
         trusted <$> indexLookupMetadata pkgid
 
+-- | Get and try to parse the PackageIdentifier of a package version
 getPackageDescription :: PackageIdentifier -> IO (Maybe PackageDescription)
 getPackageDescription pkgid =
 #if (defined(MIN_VERSION_simple_cabal) && MIN_VERSION_simple_cabal(0,1,2))
@@ -80,12 +84,15 @@ getPackageDescription pkgid =
   Just <$> withCabalFile pkgid (finalPackageDescription [])
 #endif
 
+-- | Get and parse PackageDescription of package version
+--
 -- Raises an error on failure.
 getPackageDescription' :: PackageIdentifier -> IO PackageDescription
 getPackageDescription' pkgid = do
   mfpd <- getPackageDescription pkgid
   maybe (error "Failed to parse cabal file") return mfpd
 
+-- | Easy access to the local Hackage repo
 withLocalRepo :: (Repository Local.LocalFile -> IO a) -> IO a
 withLocalRepo action = do
   home <- getHomeDirectory
@@ -104,6 +111,7 @@ withLocalRepo action = do
 
     logTUF msg = putStrLn $ "# " ++ pretty msg
 
+-- | Get all versions of a package in the index
 packageVersions :: PackageName -> IO [Version]
 packageVersions pkgname =
   withLocalRepo $ \rep -> uncheckClientErrors $ do
@@ -122,12 +130,15 @@ packageVersions pkgname =
            else Nothing
       else Nothing
 
+-- | Get the preferred-versions metadata for package
 preferredVersions :: PackageName -> IO (Maybe BL.ByteString)
 preferredVersions pkgname =
   withLocalRepo $ \rep -> uncheckClientErrors $
     withIndex rep $ \ IndexCallbacks{..} ->
     fmap indexEntryContent <$> indexLookupFile (IndexPkgPrefs pkgname)
 
+-- | List all files in the Hackage index
+-- (.cabal files, metadata .json files, preferred-versions files)
 indexFiles :: IO [String]
 indexFiles =
   withLocalRepo $ \rep -> uncheckClientErrors $ do
@@ -137,13 +148,17 @@ indexFiles =
     second (_,b,_) = b
 
     dirEntryPath = Path.toUnrootedFilePath . Path.unrootPath . second
--- FIXME: take preferred-versions into account
+
+-- | Get the latest version of package from the index
+--
+-- Note: does not take preferred-versions into account
 latestVersion :: PackageName -> IO (Maybe Version)
 latestVersion pkgname = do
   versions <- packageVersions pkgname
   if null versions then return Nothing
     else return $ Just $ last versions
 
+-- | Get the index timestamp for (the latest revision of) pkgid
 getTimestamp :: PackageIdentifier -> IO (Maybe UTCTime)
 getTimestamp pkgid =
   withLocalRepo $ \rep -> uncheckClientErrors $
