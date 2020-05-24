@@ -1,8 +1,13 @@
+{-# LANGUAGE CPP #-}
+
 import Data.Version.Extra (readVersion)
 import Distribution.Package
 import Distribution.Text (simpleParse)
 import Distribution.Version
+#if MIN_VERSION_simple_cmd_args(0,1,7)
+#else
 import Options.Applicative
+#endif
 import SimpleCmdArgs
 
 import Cmds
