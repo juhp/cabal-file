@@ -16,6 +16,7 @@ module Hackage.Index (
   getPackageDescription',
   packageIdOrLatest,
   getFileInfo,
+  -- * Re-exports from hackage-security
   FileInfo(..),
   FileLength(..),
   fileInfoSHA256
@@ -45,7 +46,7 @@ import Hackage.Security.Util.Pretty
 
 import SimpleCabal
 
--- | Get the contents of a .cabal file for package version
+-- | Get the contents of the .cabal file for package version
 getCabal  :: PackageIdentifier -> IO BL.ByteString
 getCabal pkgid =
   withLocalRepo $ \rep -> uncheckClientErrors $
@@ -71,14 +72,14 @@ getCabals pkgid1 pkgid2 =
     bs2 <- trusted <$> indexLookupCabal pkgid2
     return (bs1,bs2)
 
--- Get FileInfo metadata for package version source
+-- | Get FileInfo metadata for package version source
 getFileInfo :: PackageIdentifier -> IO FileInfo
 getFileInfo pkgid =
   withLocalRepo $ \rep -> uncheckClientErrors $
       withIndex rep $ \ IndexCallbacks{..} ->
         trusted <$> indexLookupFileInfo pkgid
 
--- | Get and try to parse the PackageIdentifier of a package version
+-- | Get and try to parse the PackageDescription of a package version
 getPackageDescription :: PackageIdentifier -> IO (Maybe PackageDescription)
 getPackageDescription pkgid =
 #if (defined(MIN_VERSION_simple_cabal) && MIN_VERSION_simple_cabal(0,1,2))
@@ -171,7 +172,7 @@ getTimestamp pkgid =
     fmap (posixSecondsToUTCTime . realToFrac . indexEntryTime) <$>
     indexLookupFile (IndexPkgCabal pkgid)
 
--- | Convert an unversioned PackageID to latest version
+-- | Convert a PackageID if unversioned to latest package version
 packageIdOrLatest :: PackageIdentifier -> IO PackageIdentifier
 packageIdOrLatest pkgid = do
   let name = pkgName pkgid
