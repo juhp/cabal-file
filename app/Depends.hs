@@ -1,3 +1,5 @@
+{-# LANGUAGE CPP #-}
+
 module Depends (
   Deps(..),
   Details(..),
@@ -137,3 +139,10 @@ prettyPut = putStrLn . prettyShow
 
 exeDepPkgName :: ExeDependency -> PackageName
 exeDepPkgName (ExeDependency n _ _) = n
+
+#if MIN_VERSION_filepath(1,4,2)
+#else
+isExtensionOf :: String -> FilePath -> Bool
+isExtensionOf ext@('.':_) = isSuffixOf ext . takeExtensions
+isExtensionOf ext         = isSuffixOf ('.':ext) . takeExtensions
+#endif
