@@ -69,7 +69,7 @@ SHA256 Hash "ce42bfa581a50f62776581da4b86408ebb1a51bc6cb2f95ad0a2ac7caa19a437"
 ## Library
 For library documentation see the [Hackage.Index](https://hackage.haskell.org/package/cabal-file/docs/Hackage-Index.html) documentation.
 
-For example usage see `app/Cmds.hs`.
+For example usage see [`app/Cmds.hs`](https://hackage.haskell.org/package/cabal-file/src/app/Cmds.hs).
 
 ## Motivation
 I originally wrote the `depends` command for displaying dependency information
