@@ -25,7 +25,7 @@ import SimpleCabal (allBuildInfo, buildDepends, buildDependencies, buildTools,
                     pkgcfgDepName, pkgconfigDepends, pkgName,
                     setupBuildInfo, setupDependencies)
 
-import Hackage.Index (withCabalFile)
+import Hackage.Index (packageIdOrLatest, withCabalFile)
 
 data Deps = Build | Setup | Tool | Legacy | CLib | PkgConfig | NotBuild
   deriving (Eq, Show)
@@ -51,7 +51,9 @@ dependsCmd quiet details opt mfile =
         else
           case simpleParse path of
             Nothing -> error $ path ++ " not a package identifier"
-            Just pkgid -> withCabalFile pkgid displayDepends
+            Just pkgid -> do
+              pkgver <- packageIdOrLatest pkgid
+              withCabalFile pkgver displayDepends
   where
     displayDepends :: FilePath -> IO ()
     displayDepends cabal = do
