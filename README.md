@@ -8,6 +8,12 @@ Since it accesses package and .cabal file data directly from
 the local Hackage repo cache index tar archive under ~/.cabal/ it is quite fast.
 
 ## Usage
+List all Hackage packages:
+```
+$ cblfile list | grep ghcide
+ghcide
+```
+
 List versions of a package:
 ```
 $ cblfile list pandoc
