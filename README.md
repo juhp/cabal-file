@@ -75,8 +75,8 @@ For example usage see [`app/Cmds.hs`](https://hackage.haskell.org/package/cabal-
 I originally wrote the `depends` command for displaying dependency information
 about packages in a more friendly way.
 
-Later, since [hdiff](http://hdiff.luite.com/) is no longer actively updated,
-and I particularly want it for comparing .cabal file versions,
+Later, since [hdiff](http://hdiff.luite.com/) is out of sync for some packages,
+and I use it particularly for comparing versions of .cabal files,
 I decided to create the `diff` command.
 Realising I could pull .cabal files direct from the cabal index cache,
 the rest of cabal-file flowed on from there.
