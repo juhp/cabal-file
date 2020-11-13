@@ -19,7 +19,7 @@ main =
     "cabal-file can access and compare .cabal files from the cache" $
     subcommands
     [ Subcommand "diff" "Diff .cabal files of package versions" $
-      diffCmd <$> strArg "PKG" <*> versionArg <*> versionArg
+      diffCmd <$> switchWith 'W' "whitespace" "Show whitespace changes" <*> strArg "PKG" <*> versionArg <*> versionArg
     , Subcommand "list" "List package versions" $
       listPkg <$> optional pkgArg
     , Subcommand "latest" "Latest package version" $

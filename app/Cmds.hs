@@ -25,14 +25,14 @@ import Hackage.Index
 
 -- FIXME structural diff of PackageDescription
 -- FIXME revisions?
-diffCmd :: String -> Version -> Version -> IO ()
-diffCmd pkg v1 v2 =
+diffCmd :: Bool -> String -> Version -> Version -> IO ()
+diffCmd whitespace pkg v1 v2 =
   withTempDir $ \ tmpdir -> do
     setCurrentDirectory tmpdir
     let pkgid1 = PackageIdentifier (mkPackageName pkg) v1
         pkgid2 = PackageIdentifier (mkPackageName pkg) v2
     saveCabals pkgid1 pkgid2
-    void $ cmdBool "diff" ["-u", showPkgId pkgid1 <.> "cabal", showPkgId pkgid2 <.> "cabal"]
+    void $ cmdBool "diff" $ ["-w" | not whitespace] ++ ["-u", showPkgId pkgid1 <.> "cabal", showPkgId pkgid2 <.> "cabal"]
 
 --  pkgdesc <- finalPackageDescription [] cabal
   where
