@@ -46,7 +46,7 @@ listPkg :: Maybe PackageName -> IO ()
 listPkg (Just pkgname) = do
   versions <- packageVersions pkgname
   mapM_ (putStrLn . showVersion) versions
-listPkg Nothing = fmap L.sort listPackages >>= mapM_ putStrLn
+listPkg Nothing = listPackages >>= mapM_ putStrLn . L.sort
 
 saveCabal :: PackageIdentifier -> IO ()
 saveCabal pkgid = do
