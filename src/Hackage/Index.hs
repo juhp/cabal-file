@@ -23,7 +23,7 @@ module Hackage.Index (
   ) where
 
 import qualified Data.ByteString.Lazy.Char8 as BL
-import Data.List
+import qualified Data.List as L
 import Data.Maybe
 import Data.Time.Clock
 import Data.Time.Clock.POSIX
@@ -123,7 +123,7 @@ packageVersions pkgname =
   withLocalRepo $ \rep -> uncheckClientErrors $ do
     dir <- getDirectory rep
     let pkg = unPackageName pkgname
-    return $ sort . mapMaybe (extractPkgVersion pkg . second) $ directoryEntries dir
+    return $ L.sort . mapMaybe (extractPkgVersion pkg . second) $ directoryEntries dir
   where
     second (_,b,_) = b
 
@@ -186,7 +186,7 @@ listPackages :: IO [String]
 listPackages =
   withLocalRepo $ \rep -> uncheckClientErrors $ do
     dir <- getDirectory rep
-    return $ nub $ mapMaybe (extractPkg . second) (directoryEntries dir)
+    return $ L.nub $ mapMaybe (extractPkg . second) (directoryEntries dir)
   where
     extractPkg path =
       if Path.takeExtension path == ".cabal" then
