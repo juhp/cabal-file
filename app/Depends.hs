@@ -7,7 +7,12 @@ module Depends (
 where
 
 import Control.Monad (unless, when)
-import Data.List (nub, (\\))
+import Data.List (
+#if !MIN_VERSION_base(4,11,0)
+  isSuffixOf,
+#endif
+  nub,
+  (\\))
 import Data.Maybe
 import System.Directory
 import System.FilePath
