@@ -55,7 +55,7 @@ executable cblfile
 library
   build-depends:       base < 5
                      , bytestring
-                     , Cabal > 2.2
+                     , Cabal >= 2.2
                      , directory
                      , extra
                      , filepath

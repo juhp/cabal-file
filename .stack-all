@@ -1,0 +1,3 @@
+[versions]
+# needs Cabal 2.2
+oldest = lts-12
