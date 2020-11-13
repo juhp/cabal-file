@@ -1,0 +1,8 @@
+- update command
+- filtering by timestamp, regexp, size, depends, license
+- stats for depends
+- reverse deps
+- revised or revision command
+
+- depends
+  - filter out ghc libs

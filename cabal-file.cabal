@@ -1,5 +1,5 @@
 name:                cabal-file
-version:             0.1.0
+version:             0.1.1
 synopsis:            Cabal file access
 description:
         cabal-file is a small library on top of the 'hackage-security' library
