@@ -142,8 +142,7 @@ prettyPut = putStrLn . prettyShow
 exeDepPkgName :: ExeDependency -> PackageName
 exeDepPkgName (ExeDependency n _ _) = n
 
-#if MIN_VERSION_filepath(1,4,2)
-#else
+#if !MIN_VERSION_filepath(1,4,2)
 isExtensionOf :: String -> FilePath -> Bool
 isExtensionOf ext@('.':_) = isSuffixOf ext . takeExtensions
 isExtensionOf ext         = isSuffixOf ('.':ext) . takeExtensions
