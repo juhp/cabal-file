@@ -30,7 +30,7 @@ executable cblfile
   hs-source-dirs:      app
   build-depends:       base < 5
                      , bytestring
-                     , Cabal > 2.2
+                     , Cabal >= 2.2
                      , cabal-file
                      , directory
                      , extra
