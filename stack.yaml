@@ -1,3 +1,1 @@
-resolver: lts-16.21
-packages:
-- .
+resolver: lts-19.33
